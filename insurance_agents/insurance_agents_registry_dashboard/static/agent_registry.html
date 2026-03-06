@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zava Insurance - Agent Registry</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a1628; color: #e0e8f0; min-height: 100vh; }
+        .navbar { background: #142538; padding: 0.75rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0096d6; }
+        .navbar .logo h1 { font-size: 1.3rem; color: #0096d6; }
+        .navbar nav a { color: #99aabb; text-decoration: none; margin-left: 1.5rem; font-size: 0.9rem; }
+        .navbar nav a:hover, .navbar nav a.active { color: #0096d6; }
+        .content { padding: 2rem; }
+        h2 { color: #0096d6; margin-bottom: 1.5rem; }
+        .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+        .agent-card { background: #111d2e; border-radius: 12px; border: 1px solid #1e3a52; overflow: hidden; transition: transform 0.2s, border-color 0.2s; }
+        .agent-card:hover { transform: translateY(-2px); border-color: #0096d6; }
+        .agent-card-header { padding: 1rem 1.25rem; background: #142538; border-bottom: 1px solid #1e3a52; display: flex; justify-content: space-between; align-items: center; }
+        .agent-card-header h3 { font-size: 1rem; color: #e0e8f0; }
+        .agent-card-header .status { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 12px; }
+        .agent-card-header .status.online { background: rgba(0,179,138,0.2); color: #00cc9d; }
+        .agent-card-header .status.offline { background: rgba(255,59,48,0.2); color: #ff6b6b; }
+        .agent-card-body { padding: 1rem 1.25rem; }
+        .agent-card-body p { color: #99aabb; font-size: 0.85rem; margin-bottom: 0.75rem; line-height: 1.4; }
+        .skills-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .skill-tag { background: rgba(0,150,214,0.15); color: #4db8e8; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; }
+        .agent-card-footer { padding: 0.75rem 1.25rem; background: #0d1520; border-top: 1px solid #1e3a52; display: flex; justify-content: space-between; font-size: 0.75rem; color: #556677; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo"><h1>🤖 Agent Registry</h1></div>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/static/agent_registry.html" class="active">Agent Registry</a>
+        </nav>
+    </div>
+    <div class="content">
+        <h2>Registered Agents</h2>
+        <div class="agents-grid" id="agentsGrid">
+            <div class="agent-card"><div class="agent-card-header"><h3>Loading...</h3></div><div class="agent-card-body"><p>Discovering agents...</p></div></div>
+        </div>
+    </div>
+    <script>
+        async function loadAgents() {
+            try {
+                const resp = await fetch('/api/agents');
+                const data = await resp.json();
+                const grid = document.getElementById('agentsGrid');
+                grid.innerHTML = '';
+                data.agents.forEach(a => {
+                    const card = a.card || {};
+                    const skills = (card.skills || []).map(s => '<span class="skill-tag">' + (s.name || s.id || '') + '</span>').join('');
+                    const displayName = (card.name || a.name || '').replace(/_/g, ' ');
+                    grid.innerHTML += `
+                        <div class="agent-card">
+                            <div class="agent-card-header">
+                                <h3>${displayName}</h3>
+                                <span class="status ${a.status}">${a.status}</span>
+                            </div>
+                            <div class="agent-card-body">
+                                <p>${card.description || 'No description available'}</p>
+                                <div class="skills-list">${skills || '<span class="skill-tag">No skills</span>'}</div>
+                            </div>
+                            <div class="agent-card-footer">
+                                <span>Port: ${a.port}</span>
+                                <span>${card.version || '1.0.0'}</span>
+                                <a href="${a.url}/.well-known/agent.json" target="_blank" style="color:#0096d6;">Agent Card</a>
+                            </div>
+                        </div>`;
+                });
+            } catch (e) { console.error('Failed to load agents:', e); }
+        }
+        loadAgents();
+        setInterval(loadAgents, 15000);
+    </script>
+</body>
+</html>

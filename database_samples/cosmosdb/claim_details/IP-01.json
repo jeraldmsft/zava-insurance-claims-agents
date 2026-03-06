@@ -1,0 +1,20 @@
+{
+    "id": "IP-01",
+    "claimId": "IP-01",
+    "status": "submitted",
+    "category": "Inpatient",
+    "billAmount": 1288,
+    "billDate": "2025-08-15",
+    "submittedAt": "2025-08-16T09:00:00Z",
+    "lastUpdatedAt": "2025-08-16T09:00:00Z",
+    "assignedEmployeeName": "Sarah Chen",
+    "assignedEmployeeID": "EMP-7001",
+    "patientName": "James Wilson",
+    "memberId": "ZV-001",
+    "region": "US",
+    "diagnosis": "Acute cholecystitis",
+    "serviceType": "inpatient_care",
+    "dischargeAttachment": "https://your-storage.blob.core.windows.net/inpatients/IP-01/IP-01_Discharge_Summary.pdf",
+    "memoAttachment": "https://your-storage.blob.core.windows.net/inpatients/IP-01/IP-01_Memo.pdf",
+    "billAttachment": "https://your-storage.blob.core.windows.net/inpatients/IP-01/IP-01_Medical_Bill.pdf"
+}

@@ -1,0 +1,14 @@
+{
+    "id": "ext-IP-01",
+    "claimId": "IP-01",
+    "extractedData": {
+        "patientName": "James Wilson",
+        "diagnosis": "Acute cholecystitis",
+        "billAmount": 1287,
+        "dateOfService": "2025-08-15",
+        "providerName": "Metro General Hospital",
+        "procedureCodes": ["47562"],
+        "dischargeDate": "2025-08-18"
+    },
+    "extractedAt": "2025-08-16T10:00:00Z"
+}

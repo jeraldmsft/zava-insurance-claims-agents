@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zava Insurance - Claims Dashboard</title>
+    <link rel="stylesheet" href="/static/chat_styles.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a1628; color: #e0e8f0; min-height: 100vh; }
+        .navbar { background: #142538; padding: 0.75rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #00b38a; }
+        .navbar .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .navbar .logo h1 { font-size: 1.3rem; color: #00b38a; }
+        .navbar .logo span { color: #99aabb; font-size: 0.9rem; }
+        .navbar nav a { color: #99aabb; text-decoration: none; margin-left: 1.5rem; font-size: 0.9rem; transition: color 0.2s; }
+        .navbar nav a:hover, .navbar nav a.active { color: #00b38a; }
+        .main-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 1.5rem 2rem; height: calc(100vh - 60px); }
+        .panel { background: #111d2e; border-radius: 12px; border: 1px solid #1e3a52; overflow: hidden; display: flex; flex-direction: column; }
+        .panel-header { background: #142538; padding: 1rem 1.5rem; border-bottom: 1px solid #1e3a52; }
+        .panel-header h2 { font-size: 1.1rem; color: #e0e8f0; }
+        .panel-header p { font-size: 0.8rem; color: #99aabb; margin-top: 0.25rem; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 1rem; }
+        .claims-table { width: 100%; border-collapse: collapse; }
+        .claims-table th { background: #0b5394; color: white; padding: 0.6rem 0.75rem; text-align: left; font-size: 0.8rem; font-weight: 600; position: sticky; top: 0; }
+        .claims-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e3a52; font-size: 0.85rem; }
+        .claims-table tr:hover { background: rgba(0,179,138,0.05); }
+        .status-badge { padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .status-badge.submitted { background: rgba(0,150,214,0.2); color: #4db8e8; }
+        .status-badge.approved { background: rgba(0,179,138,0.2); color: #00cc9d; }
+        .status-badge.rejected { background: rgba(255,59,48,0.2); color: #ff6b6b; }
+        .status-badge.processing { background: rgba(255,140,0,0.2); color: #ffaa44; }
+        .agent-status { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-bottom: 1px solid #1e3a52; }
+        .agent-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .agent-dot.online { background: #00b38a; }
+        .agent-dot.offline { background: #ff3b30; }
+        .agent-name { font-size: 0.85rem; flex: 1; }
+        .agent-port { font-size: 0.75rem; color: #556677; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <h1>🏥 Zava Insurance</h1>
+            <span>Claims Processing Dashboard</span>
+        </div>
+        <nav>
+            <a href="/" class="active">Dashboard</a>
+            <a href="/static/agent_registry.html">Agent Registry</a>
+        </nav>
+    </div>
+    <div class="main-container">
+        <!-- Left: Chat with Claims Orchestrator -->
+        <div class="panel">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <span>🤖</span>
+                    <h3>Claims Orchestrator</h3>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message agent">
+                        <div class="sender">🤖 Claims Orchestrator</div>
+                        Welcome to Zava Insurance Claims Processing. Type a claim ID to get started — e.g., "Process claim IP-01" or "Check status of OP-02".
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type a message... (e.g., Process claim IP-01)" onkeypress="if(event.key==='Enter')sendMessage()">
+                    <button class="chat-send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+        <!-- Right: Claims Table + Agent Status -->
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+            <div class="panel" style="flex:2;">
+                <div class="panel-header">
+                    <h2>📋 Claims Queue</h2>
+                    <p>All insurance claims in the system</p>
+                </div>
+                <div class="panel-body">
+                    <table class="claims-table">
+                        <thead>
+                            <tr><th>Claim ID</th><th>Patient</th><th>Category</th><th>Amount</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="claimsTableBody">
+                            <tr><td>IP-01</td><td>James Wilson</td><td>Inpatient</td><td>$1,288</td><td><span class="status-badge submitted">Submitted</span></td></tr>
+                            <tr><td>IP-02</td><td>Aisha Patel</td><td>Inpatient</td><td>$3,450</td><td><span class="status-badge submitted">Submitted</span></td></tr>
+                            <tr><td>OP-01</td><td>Robert Kim</td><td>Outpatient</td><td>$450</td><td><span class="status-badge submitted">Submitted</span></td></tr>
+                            <tr><td>OP-02</td><td>Maria Garcia</td><td>Outpatient</td><td>$275</td><td><span class="status-badge submitted">Submitted</span></td></tr>
+                            <tr><td>IP-03</td><td>Thomas Anderson</td><td>Inpatient</td><td>$8,750</td><td><span class="status-badge submitted">Submitted</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel" style="flex:1;">
+                <div class="panel-header">
+                    <h2>🤖 Agent Status</h2>
+                    <p>Multi-agent system health</p>
+                </div>
+                <div class="panel-body" id="agentStatus">
+                    <div class="agent-status"><span class="agent-dot offline"></span><span class="agent-name">Claims Orchestrator</span><span class="agent-port">:8001</span></div>
+                    <div class="agent-status"><span class="agent-dot offline"></span><span class="agent-name">Intake Clarifier</span><span class="agent-port">:8002</span></div>
+                    <div class="agent-status"><span class="agent-dot offline"></span><span class="agent-name">Document Intelligence</span><span class="agent-port">:8003</span></div>
+                    <div class="agent-status"><span class="agent-dot offline"></span><span class="agent-name">Coverage Rules Engine</span><span class="agent-port">:8004</span></div>
+                    <div class="agent-status"><span class="agent-dot offline"></span><span class="agent-name">Communication Agent</span><span class="agent-port">:8005</span></div>
+                    <div class="agent-status"><span class="agent-dot offline"></span><span class="agent-name">Voice Agent</span><span class="agent-port">:8007</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+            addMessage('user', msg);
+            document.getElementById('sendBtn').disabled = true;
+            try {
+                const resp = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: msg, session_id: 'dashboard'})
+                });
+                const data = await resp.json();
+                addMessage('agent', data.response || 'No response received.');
+            } catch (e) {
+                addMessage('system', '⚠️ Failed to reach Claims Orchestrator: ' + e.message);
+            }
+            document.getElementById('sendBtn').disabled = false;
+            input.focus();
+        }
+        function addMessage(role, text) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-message ' + role;
+            const labels = {user: '👤 You', agent: '🤖 Claims Orchestrator', system: '⚙️ System'};
+            div.innerHTML = '<div class="sender">' + (labels[role]||role) + '</div>' + text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        async function refreshAgents() {
+            try {
+                const resp = await fetch('/api/agents');
+                const data = await resp.json();
+                const container = document.getElementById('agentStatus');
+                container.innerHTML = '';
+                data.agents.forEach(a => {
+                    const dot = a.status === 'online' ? 'online' : 'offline';
+                    const displayName = a.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    container.innerHTML += '<div class="agent-status"><span class="agent-dot ' + dot + '"></span><span class="agent-name">' + displayName + '</span><span class="agent-port">:' + a.port + '</span></div>';
+                });
+            } catch (e) { console.log('Agent refresh failed:', e); }
+        }
+        refreshAgents();
+        setInterval(refreshAgents, 10000);
+    </script>
+</body>
+</html>

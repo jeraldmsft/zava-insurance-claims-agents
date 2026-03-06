@@ -1,0 +1,19 @@
+{
+    "id": "OP-01",
+    "claimId": "OP-01",
+    "status": "submitted",
+    "category": "Outpatient",
+    "billAmount": 450,
+    "billDate": "2025-08-20",
+    "submittedAt": "2025-08-21T08:00:00Z",
+    "lastUpdatedAt": "2025-08-21T08:00:00Z",
+    "assignedEmployeeName": "Sarah Chen",
+    "assignedEmployeeID": "EMP-7001",
+    "patientName": "Robert Kim",
+    "memberId": "ZV-003",
+    "region": "US",
+    "diagnosis": "Routine physical exam",
+    "serviceType": "outpatient_care",
+    "memoAttachment": "https://your-storage.blob.core.windows.net/outpatients/OP-01/OP-01_Memo.pdf",
+    "billAttachment": "https://your-storage.blob.core.windows.net/outpatients/OP-01/OP-01_Medical_Bill.pdf"
+}
