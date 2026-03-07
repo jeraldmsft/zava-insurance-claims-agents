@@ -8,7 +8,7 @@ import json
 from a2a.types import AgentSkill
 from shared.base_agent import BaseAgent
 from shared.a2a_client import A2AClient
-from shared.mcp_chat_client import MCPChatClient
+from shared.cosmos_db_client import CosmosDBClient
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +41,9 @@ class ClaimsOrchestratorAgent(BaseAgent):
             port=int(os.getenv("A2A_CLAIMS_ORCHESTRATOR_PORT", 8001)),
             skills=skills,
         )
-        mcp_host = os.getenv("MCP_SERVER_HOST", "localhost")
-        mcp_port = os.getenv("MCP_SERVER_PORT", "8080")
-        self.mcp_client = MCPChatClient(f"http://{mcp_host}:{mcp_port}")
+        self.cosmos_client = CosmosDBClient()
         self.sub_agents = {name: A2AClient(f"http://localhost:{port}") for name, port in AGENT_PORTS.items()}
-        logger.info("✅ Claims Orchestrator initialized with sub-agents")
+        logger.info("✅ Claims Orchestrator initialized with Cosmos DB and sub-agents")
     
     async def process_task(self, message: str, full_request: dict = None) -> str:
         logger.info(f"📋 Processing: {message}")
@@ -55,15 +53,10 @@ class ClaimsOrchestratorAgent(BaseAgent):
         if not claim_id:
             return "Please provide a claim ID (e.g., 'Process claim IP-01' or 'Check status of OP-03')."
         
-        # Fetch claim from MCP
-        claim_data = await self.mcp_client.get_claim_details(claim_id)
-        if not claim_data or "error" in str(claim_data):
+        # Fetch claim from Cosmos DB
+        claim_info = self.cosmos_client.get_claim(claim_id)
+        if not claim_info:
             return f"Claim {claim_id} not found in the database."
-        
-        if isinstance(claim_data, str):
-            claim_data = json.loads(claim_data)
-        
-        claim_info = claim_data.get("result", claim_data) if isinstance(claim_data, dict) else claim_data
         
         # Status check
         if any(word in message.lower() for word in ["status", "check", "query", "find"]):
